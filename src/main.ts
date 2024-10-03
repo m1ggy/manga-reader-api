@@ -1,18 +1,17 @@
 require('dotenv').config();
-import Redis from 'ioredis';
-import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
+import Fastify from 'fastify';
 import fs from 'fs';
+import Redis from 'ioredis';
 
-import books from './routes/books';
-import anime from './routes/anime';
-import manga from './routes/manga';
-import comics from './routes/comics';
-import lightnovels from './routes/light-novels';
-import movies from './routes/movies';
-import meta from './routes/meta';
-import news from './routes/news';
 import chalk from 'chalk';
+import anime from './routes/anime';
+import books from './routes/books';
+import lightnovels from './routes/light-novels';
+import manga from './routes/manga';
+import meta from './routes/meta';
+import movies from './routes/movies';
+import news from './routes/news';
 import Utils from './utils';
 
 export const redis =
@@ -32,7 +31,7 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
   const PORT = Number(process.env.PORT) || 3000;
 
   await fastify.register(FastifyCors, {
-    origin: '*',
+    origin: ['http://localhost:5173', 'http://localhost:3001'],
     methods: 'GET',
   });
 
@@ -145,9 +144,10 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
   try {
     fastify.get('/', (_, rp) => {
       rp.status(200).send(
-        `Welcome to consumet api! 🎉 \n${process.env.NODE_ENV === 'DEMO'
-          ? 'This is a demo of the api. You should only use this for testing purposes.'
-          : ''
+        `Welcome to consumet api! 🎉 \n${
+          process.env.NODE_ENV === 'DEMO'
+            ? 'This is a demo of the api. You should only use this for testing purposes.'
+            : ''
         }`,
       );
     });
@@ -168,6 +168,6 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
   }
 })();
 export default async function handler(req: any, res: any) {
-  await fastify.ready()
-  fastify.server.emit('request', req, res)
+  await fastify.ready();
+  fastify.server.emit('request', req, res);
 }

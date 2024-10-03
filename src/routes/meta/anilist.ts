@@ -1,14 +1,13 @@
-import { Redis } from 'ioredis';
-import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
 import { ANIME, META, PROVIDERS_LIST } from '@consumet/extensions';
-import { Genres } from '@consumet/extensions/dist/models';
+import { Genres, StreamingServers } from '@consumet/extensions/dist/models';
 import Anilist from '@consumet/extensions/dist/providers/meta/anilist';
-import { StreamingServers } from '@consumet/extensions/dist/models';
+import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from 'fastify';
+import { Redis } from 'ioredis';
 
-import cache from '../../utils/cache';
-import { redis } from '../../main';
 import NineAnime from '@consumet/extensions/dist/providers/anime/9anime';
 import Gogoanime from '@consumet/extensions/dist/providers/anime/gogoanime';
+import { redis } from '../../main';
+import cache from '../../utils/cache';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   fastify.get('/', (_, rp) => {
@@ -80,7 +79,10 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         season,
       );
 
-      reply.status(200).send(res);
+      //Show manga only for now
+      reply
+        .status(200)
+        .send({ ...res, result: res.results.filter((x) => x.type === 'MANGA') });
     },
   );
 
@@ -133,7 +135,7 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
       const weekEnd = (request.query as { weekEnd: number | string }).weekEnd;
       const notYetAired = (request.query as { notYetAired: boolean }).notYetAired;
 
-       const anilist = generateAnilistMeta();
+      const anilist = generateAnilistMeta();
       const _weekStart = Math.ceil(Date.now() / 1000);
 
       const res = await anilist.fetchAiringSchedule(
@@ -346,22 +348,23 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
 
   //anilist staff info from character id (for example: voice actors)
   //http://127.0.0.1:3000/meta/anilist/staff/95095  (gives info of sukuna's voice actor (Junichi Suwabe) )
-  fastify.get("/staff/:id", async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/staff/:id', async (request: FastifyRequest, reply: FastifyReply) => {
     const id = (request.params as { id: string }).id;
 
     const anilist = generateAnilistMeta();
     try {
       redis
-        ? reply.status(200).send(
-          await cache.fetch(
-            redis,
-            `anilist:staff;${id}`,
-            async () => await anilist.fetchStaffById(Number(id)),
-            60 * 60,
-          ),
-        )
+        ? reply
+            .status(200)
+            .send(
+              await cache.fetch(
+                redis,
+                `anilist:staff;${id}`,
+                async () => await anilist.fetchStaffById(Number(id)),
+                60 * 60,
+              ),
+            )
         : reply.status(200).send(await anilist.fetchStaffById(Number(id)));
-
     } catch (err: any) {
       reply.status(404).send({ message: err.message });
     }
