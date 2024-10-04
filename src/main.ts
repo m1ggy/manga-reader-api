@@ -30,8 +30,16 @@ export const tmdbApi = process.env.TMDB_KEY && process.env.TMDB_KEY;
 (async () => {
   const PORT = Number(process.env.PORT) || 3000;
 
+  const allowedSites = ['https://mangachows.com'];
+
+  console.log('MODE: ', process.env.MODE);
+  if (process.env.MODE === 'DEV') {
+    allowedSites.push('http://localhost:5173');
+    allowedSites.push('http://localhost:3001');
+    allowedSites.push('http://localhost:5174');
+  }
   await fastify.register(FastifyCors, {
-    origin: ['http://localhost:5173', 'http://localhost:3001'],
+    origin: allowedSites,
     methods: 'GET',
   });
 
