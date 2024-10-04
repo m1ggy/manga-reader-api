@@ -28,7 +28,7 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 # Start the application with PM2
-pm2 start app.js --name "my-app" --env production
+pm2 start npm  --name "reader-api" --env production -- start
 
 # Optional: Set PM2 to auto-start on reboot
 pm2 startup
