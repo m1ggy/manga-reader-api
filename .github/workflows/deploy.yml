@@ -19,7 +19,7 @@ jobs:
           script: |
             # Navigate to the directory where the project is stored
             if [ ! -d "~/apps/reader-api" ]; then
-                git clone https://github.com/m1ggy/manga-reader-api.git ~/apps/reader-api
+                git clone git@github.com:m1ggy/manga-reader-api.git ~/apps/reader-api
             else
                 cd ~/apps/reader-api
                 git pull origin main
