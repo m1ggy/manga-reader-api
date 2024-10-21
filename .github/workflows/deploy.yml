@@ -26,6 +26,7 @@ jobs:
             if [ ! -d "$HOME/apps/reader-api" ]; then
               echo "Cloning repository..."
               git clone git@github.com:m1ggy/manga-reader-api.git $HOME/apps/reader-api
+              cd $HOME/apps/reader-api
             else
               echo "Pulling the latest changes..."
               cd $HOME/apps/reader-api
