@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push: 
     branches: 
-        - main
+      - main
 
 jobs:
   build:
@@ -17,39 +17,67 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
+            # Enable error handling
+            set -e
+            trap 'echo "An error occurred on line $LINENO"; exit 1' ERR
+
+            echo "Navigating to the project directory or cloning the repository"
             # Navigate to the directory where the project is stored
-            if [ ! -d "~/apps/reader-api" ]; then
-                git clone git@github.com:m1ggy/manga-reader-api.git ~/apps/reader-api
+            if [ ! -d "$HOME/apps/reader-api" ]; then
+              echo "Cloning repository..."
+              git clone git@github.com:m1ggy/manga-reader-api.git $HOME/apps/reader-api
             else
-                cd ~/apps/reader-api
-                git pull origin main
+              echo "Pulling the latest changes..."
+              cd $HOME/apps/reader-api
+              git pull origin main
             fi
 
-            # Install nvm if it's not installed
-            if ! command -v nvm &> /dev/null; then
-                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-                source ~/.nvm/nvm.sh
+            echo "Checking if nvm is installed"
+            # Check if nvm is installed
+            if [ -s "$HOME/.nvm/nvm.sh" ]; then
+              echo "nvm is already installed. Sourcing nvm..."
+              export NVM_DIR="$HOME/.nvm"
+              source "$NVM_DIR/nvm.sh"
+              [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+            else
+              echo "Installing nvm..."
+              curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+              export NVM_DIR="$HOME/.nvm"
+              source "$NVM_DIR/nvm.sh"
+              [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
             fi
 
+            echo "Loading Node.js version from .nvmrc"
             # Load nvm and install Node.js version from .nvmrc
-            source ~/.nvm/nvm.sh
             nvm install $(cat .nvmrc)
+            nvm use $(cat .nvmrc)  # Ensure we are using the correct version
 
+            echo "Checking if pm2 is installed"
             # Install pm2 if not installed
             if ! command -v pm2 &> /dev/null; then
-                npm install -g pm2
+              echo "Installing pm2..."
+              npm install -g pm2
+            else
+              echo "pm2 is already installed"
             fi
 
+            echo "Checking if pnpm is installed"
             # Install pnpm if not installed
             if ! command -v pnpm &> /dev/null; then
-                npm install -g pnpm
+              echo "Installing pnpm..."
+              npm install -g pnpm
+            else
+              echo "pnpm is already installed"
             fi
 
+            echo "Installing dependencies"
             # Install dependencies
             pnpm install
 
+            echo "Starting or reloading the application with pm2"
             # Start the application using pm2
             pm2 start ecosystem.config.js || pm2 reload ecosystem.config.js
 
+            echo "Reloading Caddy"
             # Reload Caddy
-            sudo caddy reload
+            sudo caddy reload --config /etc/caddy/Caddyfile
