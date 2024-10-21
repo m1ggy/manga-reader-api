@@ -17,39 +17,39 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
-          # Navigate to the directory where the project is stored
-          if [ ! -d "~/apps/reader-api" ]; then
-            git clone https://github.com/m1ggy/manga-reader-api.git ~/apps/reader-api
-          else
-            cd ~/apps/reader-api
-            git pull origin main
-          fi
+            # Navigate to the directory where the project is stored
+            if [ ! -d "~/apps/reader-api" ]; then
+                git clone https://github.com/m1ggy/manga-reader-api.git ~/apps/reader-api
+            else
+                cd ~/apps/reader-api
+                git pull origin main
+            fi
 
-          # Install nvm if it's not installed
-          if ! command -v nvm &> /dev/null; then
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+            # Install nvm if it's not installed
+            if ! command -v nvm &> /dev/null; then
+                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+                source ~/.nvm/nvm.sh
+            fi
+
+            # Load nvm and install Node.js version from .nvmrc
             source ~/.nvm/nvm.sh
-          fi
+            nvm install $(cat .nvmrc)
 
-          # Load nvm and install Node.js version from .nvmrc
-          source ~/.nvm/nvm.sh
-          nvm install $(cat .nvmrc)
+            # Install pm2 if not installed
+            if ! command -v pm2 &> /dev/null; then
+                npm install -g pm2
+            fi
 
-          # Install pm2 if not installed
-          if ! command -v pm2 &> /dev/null; then
-            npm install -g pm2
-          fi
+            # Install pnpm if not installed
+            if ! command -v pnpm &> /dev/null; then
+                npm install -g pnpm
+            fi
 
-          # Install pnpm if not installed
-          if ! command -v pnpm &> /dev/null; then
-            npm install -g pnpm
-          fi
+            # Install dependencies
+            pnpm install
 
-          # Install dependencies
-          pnpm install
+            # Start the application using pm2
+            pm2 start ecosystem.config.js || pm2 reload ecosystem.config.js
 
-          # Start the application using pm2
-          pm2 start ecosystem.config.js || pm2 reload ecosystem.config.js
-
-          # Reload Caddy
-          sudo caddy reload
+            # Reload Caddy
+            sudo caddy reload
