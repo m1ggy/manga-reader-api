@@ -74,7 +74,7 @@ jobs:
             echo "Installing dependencies"
             # Install dependencies
             pnpm install
-            pnpm add ts-node typescript @types/node
+            npm install ts-node -g
 
             echo "Create .env file"
             echo "PORT=3001" >> .env
