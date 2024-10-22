@@ -76,6 +76,9 @@ jobs:
             pnpm install
             pnpm add ts-node typescript @types/node
 
+            echo "Create .env file"
+            echo "PORT=3001" >> .env
+
             echo "Starting or reloading the application with pm2"
             # Start the application using pm2
             pm2 start ecosystem.config.js || pm2 reload ecosystem.config.js
