@@ -1,6 +1,5 @@
-import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from 'fastify';
-import { META } from '@consumet/extensions';
-import { PROVIDERS_LIST } from '@consumet/extensions';
+import { META, PROVIDERS_LIST } from '@consumet/extensions';
+import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from 'fastify';
 
 const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
   // TODO: Allocate new provider per request rather
@@ -42,8 +41,11 @@ const routes = async (fastify: FastifyInstance, options: RegisterOptions) => {
         .fetchMangaInfo(id)
         .catch((err) => reply.status(404).send({ message: err }));
 
-      reply.status(200).send(res);
+      console.log(res);
+
       anilist = new META.Anilist.Manga();
+      console.log({ anilist });
+      reply.status(200).send(res);
     } catch (err) {
       reply
         .status(500)
